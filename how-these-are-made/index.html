@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-GB"><head><meta name="robots" content="noindex,nofollow"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How these explainers are made</title>
+<style>
+:root{--ink:#111;--grey:#6b7280;--red:#d71f26;--soft:#f3f4f6}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:18px/1.6 "Helvetica Neue",Helvetica,Arial,sans-serif}
+main{max-width:720px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:2rem;line-height:1.2;margin:0 0 8px}
+h2{font-size:1.15rem;margin:36px 0 8px;color:var(--red);text-transform:uppercase;letter-spacing:.06em}
+p.lead{color:var(--grey);margin:0 0 24px}
+blockquote{margin:12px 0;padding:12px 16px;background:var(--soft);border-left:4px solid var(--red)}
+ul,ol{padding-left:22px}li{margin:6px 0}
+a{color:var(--red)}
+</style></head><body><main>
+<p><a href="../">All explainers</a></p>
+<h1>How these explainers are made</h1>
+<p class="lead">This is the brief I give my AI assistant for every explainer on this site. It is the same each time.</p>
+
+<h2>The original request</h2>
+<blockquote>"Explain this hyper intuitively, bottoms up, with the most simple step by step animations so I really understand concretely."</blockquote>
+<p>Then: "share a html". The result is one self-contained web page you can open anywhere.</p>
+
+<h2>The bottom-up rule</h2>
+<ul>
+<li>Start with the smallest working piece, such as a model on its own or a single tool.</li>
+<li>Add one idea per step.</li>
+<li>Open each step with the problem the last step left behind.</li>
+<li>Put the whole picture together near the end. Then cover attacks and failure cases, cost, what is proven, what is not yet, and what each audience takes away.</li>
+<li>If two steps can swap places, it is a list and not a build. Reorder until each step needs the one before it.</li>
+</ul>
+
+<h2>How the page is built</h2>
+<ol>
+<li>Gather facts from primary sources only: documentation, evidence, code. Mark preview features, made-up data and my own reading. Invent no numbers. Say how any measured figure was measured.</li>
+<li>Outline 12 to 18 steps. Each step answers one question.</li>
+<li>For each step, draw one small animation. It plays in beats, one idea per beat.</li>
+<li>Under each beat, write a plain explanation.</li>
+<li>Next to it, put a red "Say this" box with the exact words to speak.</li>
+<li>Add a short panel that tailors the point for an executive, a security reader and an operations reader.</li>
+<li>End with a quiz of six to eight questions.</li>
+<li>Open every step in a browser and look for overflow, overlap and clipped text before it goes out.</li>
+</ol>
+
+<h2>The Say box is a story, not a caption</h2>
+<ul>
+<li>Each step tells one small story across its beats: a generic person or agent, one want, one thing that goes wrong, one fix.</li>
+<li>Never a named character.</li>
+<li>The product or exam term arrives last, as the name for what just happened. The listener should be able to repeat it to someone else.</li>
+<li>End each step with one plain line to carry away.</li>
+<li>Few words. Each beat moves the story one step.</li>
+</ul>
+
+<h2>Voice</h2>
+<ul>
+<li>Short plain sentences. "I" and not "we". No em dashes. No emoji.</li>
+<li>No "not this but that" contrast tricks.</li>
+<li>Teach from zero. Plain word first, then the proper term. Never an unexplained acronym.</li>
+<li>Fictional data only in examples and labs.</li>
+</ul>
+
+<p style="color:#6b7280;margin-top:40px">The assistant follows this brief closely. It can still get facts wrong, so check anything that matters against the source linked in each explainer.</p>
+</main></body></html>
