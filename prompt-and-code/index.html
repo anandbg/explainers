@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en-GB"><head><meta name="robots" content="noindex,nofollow"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The prompt and code behind these explainers</title>
+<style>
+:root{--ink:#111;--grey:#6b7280;--red:#d71f26;--soft:#f3f4f6}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:18px/1.6 "Helvetica Neue",Helvetica,Arial,sans-serif}
+main{max-width:820px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:2rem;line-height:1.2;margin:0 0 8px}
+h2{font-size:1.15rem;margin:40px 0 8px;color:var(--red);text-transform:uppercase;letter-spacing:.06em}
+pre{background:var(--soft);padding:14px;overflow:auto;font-size:13px;line-height:1.45;border-radius:6px}
+pre.prompt{white-space:pre-wrap;font-size:14px}
+li{margin:6px 0}a{color:var(--red)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.flow span{border:2px solid var(--ink);border-radius:8px;padding:6px 10px;font-size:15px;background:#fff}
+.flow b{color:var(--red)}
+</style></head><body><main>
+<p><a href="../">All explainers</a></p>
+<h1>The prompt and code behind these explainers</h1>
+<p style="color:var(--grey)">Everything here is what my AI assistant follows to turn a topic into one animated web page. The prompt first, then how the page is generated, then the code.</p>
+
+<h2>How a page gets made, in one line</h2>
+<div class="flow"><span>Topic</span><b>→</b><span>Facts from primary sources</span><b>→</b><span>Outline of 12 to 18 steps</span><b>→</b><span>One scene per step (Python)</span><b>→</b><span>build.py</span><b>→</b><span>One HTML file</span><b>→</b><span>Screenshot every step</span><b>→</b><span>Publish</span></div>
+
+<h2>1. The prompt (the instructions the assistant follows)</h2>
+<pre class="prompt"># Explainer
+
+The original prompt: &quot;explain this hyper intuitively bottoms up with the most simple step by step animations so i really understand concretely&quot;, then &quot;share a html&quot;.
+
+## The bottom-up rule
+- Start with the smallest working piece (a model on its own, a single tool).
+- Add ONE idea per step.
+- Open each step with the problem the last step left. Append &quot;Next problem: ...&quot; to the last beat via BRIDGE.
+- Put the whole picture together near the end, then attacks or failure cases, cost, what is proven, what is not yet, and what each audience takes away.
+- If two steps can swap places, it is a list, not a build. Reorder.
+
+## Method
+1. Gather facts from primary files only (docs, evidence, code). Mark preview features, made-up data and &quot;my reading&quot; items. Do not invent numbers. State measured figures with how they were measured.
+2. Outline 12 to 18 steps, each answering one question.
+3. Copy the kit: a new working folder, then copy the kit files into it. 
+4. Write `scenes_&lt;topic&gt;.py`. Each scene function returns `dict(title, narr, say, aud, svg)`:
+   - svg: built from engine.py helpers (T, TL, R, Gp, Ln, Box, Bub, Person, Key, Lock, Doc, Cap, Card, Tag). Viewbox is 960 wide by about 600 tall. Beats use `s=` (first beat shown) and `e=` (first beat hidden). Beat 0 is visible from the start.
+   - narr: plain explanation, one per beat.
+   - say: the words to speak, one per beat, 8 to 20 words. `len(say) == len(narr)` (build.py asserts).
+   - aud: dict(exec=, sec=, ops=) one line each.
+   - 
+5. Edit CONFIG at the top of `build.py` (TITLE, BRAND, OUT, ORDER, BRIDGE, QS, INTRO_PARAS). Quiz: 6 to 8 questions, answers rotate automatically.
+6. Build: `/usr/bin/python3 build.py` (Pillow and other libs live on the system Python).
+7. Check: `./shot.sh &quot;$PWD/&lt;out&gt;.html&quot; &lt;scene&gt; &lt;beat&gt; /tmp/x.png` for the last beat of every step, then OPEN each image and look for overflow, overlap and clipped text. Exit 0 proves nothing visual. 
+8. Fix, rebuild and send the finished HTML file.
+
+## The Say box is a story, not a caption 
+- Each step gets one small story told across its beats: a generic person or agent (&quot;a customer&quot;, &quot;a team&quot;, &quot;an agent&quot;, never a named character), one want, one thing that goes wrong, one fix.
+- The exam or product term arrives last, as the name for what just happened. The listener should be able to repeat it to someone else.
+- End the step with one plain line: the answer to carry into the exam or the room.
+- Few words. Lines still align one per beat, so each beat moves the story one step.
+
+## Voice
+- Humanizer rules: short plain sentences, &quot;I&quot; not &quot;we&quot;, no em dashes, no emoji, no not-X-but-Y.
+- Teach from zero. Plain word first, then the proper term. Never an unexplained acronym.
+- In the file, &quot;Say this&quot; is first person. Flag which claims say &quot;I built/tested&quot; so the speaker can change them.
+- Fictional data only in examples and labs.</pre>
+
+<h2>2. How the screens are generated</h2>
+<ul>
+<li>Each step is a small Python function called a scene. It returns five things: a title, one plain explanation per beat, one line to speak per beat, a one-line note for each audience, and the drawing.</li>
+<li>The drawing is an SVG built from a few helper functions: text, rectangles, groups, lines, boxes, speech bubbles, people, keys, locks, documents, cards and tags. The canvas is 960 wide by about 600 tall.</li>
+<li>Each drawn item says on which beat it appears and on which beat it disappears. That is how the animation steps forward.</li>
+<li>The build script loads every scene, checks that each beat has both an explanation and a line to speak, rotates the quiz answers, and pours everything into one HTML template as JSON.</li>
+<li>The template holds the interface: a step menu, next and previous buttons, the red "Say this" panel with a script on/off switch, the audience panel and the quiz. No server and no libraries. One file works offline.</li>
+<li>A screenshot script opens each step at its last beat in headless Chrome so I can look for clipped or overlapping text before it ships.</li>
+</ul>
+
+<h2>3. The build script</h2>
+<p>Source: <a href="../kit/build.py">kit/build.py</a></p>
+<pre><code>&quot;&quot;&quot;Generic explainer builder. Copy this kit to ~/work/&lt;topic&gt;/explainer-html/, then edit CONFIG and write scenes_*.py.
+Run with: /usr/bin/python3 build.py
+Each scenes module exposes SCENES = [fn, ...]; each fn returns dict(title, narr, say, aud, svg).&quot;&quot;&quot;
+import sys, os, json, importlib
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from engine import DEFS
+
+# ---- CONFIG: edit these ----
+TITLE = &#x27;Example explainer&#x27;
+BRAND = &#x27;Example · fictional data&#x27;
+OUT = &#x27;explainer.html&#x27;
+ORDER = [(&#x27;example_scenes&#x27;, 0), (&#x27;example_scenes&#x27;, 1), (&#x27;example_scenes&#x27;, 2), (&#x27;example_scenes&#x27;, 3)]  # (module, index in SCENES)
+BRIDGE = {}  # scene title -&gt; &quot;Next problem: ...&quot; appended to the last beat of that step
+# quiz: [cue, ask, [options], index of right answer, why]. rotate() moves the right answer around.
+QS = [
+ [&#x27;&quot;Example question the room will ask?&quot;&#x27;, &#x27;What do you say?&#x27;, [&#x27;Wrong one&#x27;, &#x27;The right one&#x27;, &#x27;Another wrong one&#x27;], 1, &#x27;Why the right one is right.&#x27;],
+]
+INTRO_PARAS = [&#x27;One or two plain sentences on what this is and who it is for.&#x27;, &#x27;Each step has a small animation, a plain explanation and a red box with the words to say.&#x27;]
+# ---- end CONFIG ----
+
+def rotate(qs):
+    out = []
+    for i, (cue, ask, opts, ok, why) in enumerate(qs):
+        k = [0, 2, 1][i % 3]
+        opts2 = opts[k:] + opts[:k]
+        out.append([cue, ask, opts2, (ok - k) % len(opts), why])
+    return out
+
+def collect():
+    scenes = []
+    for mod, k in ORDER:
+        sc = importlib.import_module(mod).SCENES[k]()
+        sc[&#x27;svg&#x27;] = DEFS + sc[&#x27;svg&#x27;]
+        br = BRIDGE.get(sc[&#x27;title&#x27;])
+        if br:
+            sc[&#x27;narr&#x27;][-1] += &#x27; &#x27; + br
+            sc[&#x27;say&#x27;][-1] += &#x27; &#x27; + br
+        assert len(sc[&#x27;say&#x27;]) == len(sc[&#x27;narr&#x27;]), sc[&#x27;title&#x27;]
+        scenes.append(sc)
+    return scenes
+
+if __name__ == &#x27;__main__&#x27;:
+    scenes = collect()
+    paras = &#x27;&#x27;.join(f&#x27;&lt;p&gt;{p}&lt;/p&gt;&#x27; for p in INTRO_PARAS)
+    introhtml = &#x27;`&lt;div class=&quot;card&quot;&gt;&lt;h2&gt;&#x27; + TITLE + &#x27;&lt;/h2&gt;&#x27; + paras + &#x27;&lt;ol&gt;${PY.map(s=&gt;`&lt;li&gt;${s.title}&lt;/li&gt;`).join(\&#x27;\&#x27;)}&lt;/ol&gt;&lt;/div&gt;`&#x27;
+    intro = json.dumps({&#x27;kind&#x27;: &#x27;intro&#x27;, &#x27;title&#x27;: TITLE, &#x27;narr&#x27;: [&#x27;Start&#x27;]})
+    tpl = open(f&#x27;{HERE}/template.html&#x27;).read()
+    out = (tpl.replace(&#x27;__SCENES__&#x27;, json.dumps(scenes, ensure_ascii=False)).replace(&#x27;__INTRO__&#x27;, intro)
+              .replace(&#x27;__QS__&#x27;, json.dumps(rotate(QS), ensure_ascii=False)).replace(&#x27;__INTROHTML__&#x27;, introhtml)
+              .replace(&#x27;__TITLE__&#x27;, TITLE).replace(&#x27;__BRAND__&#x27;, BRAND))
+    open(f&#x27;{HERE}/{OUT}&#x27;, &#x27;w&#x27;).write(out)
+    print(len(scenes), &#x27;scenes,&#x27;, sum(len(s[&#x27;narr&#x27;]) for s in scenes), &#x27;beats,&#x27;, round(len(out) / 1024), &#x27;KB&#x27;)
+</code></pre>
+
+<h2>4. The drawing helpers</h2>
+<p>Source: <a href="../kit/engine.py">kit/engine.py</a></p>
+<pre><code>&quot;&quot;&quot;Tiny DSL for the step-by-step Domain 1 explainer. Everything is inline SVG with data-* beat attributes.&quot;&quot;&quot;
+INK, GREY, RED, SOFT = &#x27;#111111&#x27;, &#x27;#6b7280&#x27;, &#x27;#d71f26&#x27;, &#x27;#eceef1&#x27;
+
+def A(**k):
+    return &#x27;&#x27;.join(f&#x27; data-{key}=&quot;{v}&quot;&#x27; for key, v in k.items() if v is not None)
+
+def esc(t):
+    return t.replace(&#x27;&amp;&#x27;, &#x27;&amp;amp;&#x27;).replace(&#x27;&lt;&#x27;, &#x27;&amp;lt;&#x27;).replace(&#x27;&gt;&#x27;, &#x27;&amp;gt;&#x27;)
+
+def T(x, y, t, size=30, fill=INK, anchor=&#x27;start&#x27;, w=400, **k):
+    return f&#x27;&lt;text x=&quot;{x}&quot; y=&quot;{y}&quot; font-size=&quot;{size}&quot; fill=&quot;{fill}&quot; text-anchor=&quot;{anchor}&quot; font-weight=&quot;{w}&quot;{A(**k)}&gt;{esc(t)}&lt;/text&gt;&#x27;
+
+def TL(x, y, lines, size=28, fill=INK, anchor=&#x27;start&#x27;, w=400, lh=None, **k):
+    lh = lh or size * 1.28
+    inner = &#x27;&#x27;.join(f&#x27;&lt;tspan x=&quot;{x}&quot; dy=&quot;{0 if i == 0 else lh}&quot;&gt;{esc(l)}&lt;/tspan&gt;&#x27; for i, l in enumerate(lines))
+    return f&#x27;&lt;text x=&quot;{x}&quot; y=&quot;{y}&quot; font-size=&quot;{size}&quot; fill=&quot;{fill}&quot; text-anchor=&quot;{anchor}&quot; font-weight=&quot;{w}&quot;{A(**k)}&gt;{inner}&lt;/text&gt;&#x27;
+
+def R(x, y, w, h, fill=&#x27;#fff&#x27;, stroke=INK, sw=4, rx=14, dash=None, **k):
+    d = f&#x27; stroke-dasharray=&quot;{dash}&quot;&#x27; if dash else &#x27;&#x27;
+    return f&#x27;&lt;rect x=&quot;{x}&quot; y=&quot;{y}&quot; width=&quot;{w}&quot; height=&quot;{h}&quot; rx=&quot;{rx}&quot; fill=&quot;{fill}&quot; stroke=&quot;{stroke}&quot; stroke-width=&quot;{sw}&quot;{d}{A(**k)}/&gt;&#x27;
+
+def Gp(inner, **k):
+    return f&#x27;&lt;g{A(**k)}&gt;{inner}&lt;/g&gt;&#x27;
+
+def Ln(x1, y1, x2, y2, stroke=INK, sw=4, arrow=False, dash=None, **k):
+    d = f&#x27; stroke-dasharray=&quot;{dash}&quot;&#x27; if dash else &#x27;&#x27;
+    m = (&#x27; marker-end=&quot;url(#%s)&quot;&#x27; % {RED: &#x27;ahr&#x27;, GREY: &#x27;ahg&#x27;}.get(stroke, &#x27;ah&#x27;)) if arrow else &#x27;&#x27;
+    return f&#x27;&lt;path d=&quot;M{x1} {y1} L{x2} {y2}&quot; stroke=&quot;{stroke}&quot; stroke-width=&quot;{sw}&quot; fill=&quot;none&quot;{d}{m}{A(**k)}/&gt;&#x27;
+
+def Box(x, y, w, h, label, size=30, sub=None, fill=&#x27;#fff&#x27;, stroke=INK, sw=4, dash=None, rx=14, **k):
+    cx = x + w / 2
+    if sub:
+        body = T(cx, y + h / 2 - 2, label, size, INK, &#x27;middle&#x27;, 700) + T(cx, y + h / 2 + 28, sub, 22, GREY, &#x27;middle&#x27;, 400)
+    else:
+        body = T(cx, y + h / 2 + size * 0.35, label, size, INK, &#x27;middle&#x27;, 700)
+    return Gp(R(x, y, w, h, fill, stroke, sw, rx, dash) + body, **k)
+
+def wid(t, size, pad=40):
+    return int(len(t) * size * 0.56 + pad)
+
+def Bub(x, y, t, size=26, fill=&#x27;#fff&#x27;, stroke=INK, w=None, **k):
+    w = w or wid(t, size)
+    return Gp(R(x, y, w, size + 30, fill, stroke, 3, 18) + T(x + w / 2, y + size + 8, t, size, INK, &#x27;middle&#x27;, 400), **k)
+
+def Person(x, y, label=&#x27;You&#x27;, **k):
+    return Gp(f&#x27;&lt;circle cx=&quot;{x}&quot; cy=&quot;{y-30}&quot; r=&quot;22&quot; fill=&quot;#fff&quot; stroke=&quot;{INK}&quot; stroke-width=&quot;4&quot;/&gt;&#x27;
+              f&#x27;&lt;path d=&quot;M{x-36} {y+44} a36 36 0 0 1 72 0 z&quot; fill=&quot;#fff&quot; stroke=&quot;{INK}&quot; stroke-width=&quot;4&quot;/&gt;&#x27;
+              + T(x, y + 84, label, 26, INK, &#x27;middle&#x27;, 700), **k)
+
+def Key(x, y, color=RED, s=1.0, **k):
+    return Gp(f&#x27;&lt;g transform=&quot;translate({x},{y}) scale({s})&quot;&gt;&lt;circle cx=&quot;10&quot; cy=&quot;15&quot; r=&quot;9&quot; fill=&quot;none&quot; stroke=&quot;{color}&quot; stroke-width=&quot;4.5&quot;/&gt;&#x27;
+              f&#x27;&lt;path d=&quot;M19 15 H46 M38 15 V25 M44 15 V23&quot; stroke=&quot;{color}&quot; stroke-width=&quot;4.5&quot; fill=&quot;none&quot;/&gt;&lt;/g&gt;&#x27;, **k)
+
+def Lock(x, y, color=INK, s=1.0, **k):
+    return Gp(f&#x27;&lt;g transform=&quot;translate({x},{y}) scale({s})&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;14&quot; width=&quot;30&quot; height=&quot;22&quot; rx=&quot;4&quot; fill=&quot;{color}&quot;/&gt;&#x27;
+              f&#x27;&lt;path d=&quot;M5 14 V9 a10 10 0 0 1 20 0 V14&quot; fill=&quot;none&quot; stroke=&quot;{color}&quot; stroke-width=&quot;4.5&quot;/&gt;&lt;/g&gt;&#x27;, **k)
+
+def Doc(x, y, w=70, h=90, **k):
+    return Gp(R(x, y, w, h, &#x27;#fff&#x27;, INK, 3, 6) + &#x27;&#x27;.join(f&#x27;&lt;path d=&quot;M{x+12} {y+22+i*20} H{x+w-12}&quot; stroke=&quot;{GREY}&quot; stroke-width=&quot;3&quot;/&gt;&#x27; for i in range(3)), **k)
+
+DEFS = &#x27;&lt;defs&gt;&#x27; + &#x27;&#x27;.join(f&#x27;&lt;marker id=&quot;{i}&quot; markerUnits=&quot;userSpaceOnUse&quot; markerWidth=&quot;18&quot; markerHeight=&quot;18&quot; refX=&quot;15&quot; refY=&quot;9&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0 0 L16 9 L0 18 Z&quot; fill=&quot;{c}&quot;/&gt;&lt;/marker&gt;&#x27; for i, c in ((&#x27;ah&#x27;, INK), (&#x27;ahr&#x27;, RED), (&#x27;ahg&#x27;, GREY))) + &#x27;&lt;/defs&gt;&#x27;
+
+def Cap(t, s=None, e=None, y=560, col=INK, size=26):
+    return T(480, y, t, size, col, &#x27;middle&#x27;, 700, s=s, e=e)
+
+def Card(x, y, w, h, title, sub=None, hot=False, dash=None, **k):
+    body = R(x, y, w, h, &#x27;#fff&#x27;, RED if hot else INK, 4, 14, dash)
+    if sub:
+        body += T(x + w / 2, y + h / 2 - 2, title, 26, RED if hot else INK, &#x27;middle&#x27;, 700) + T(x + w / 2, y + h / 2 + 28, sub, 20, GREY, &#x27;middle&#x27;)
+    else:
+        body += T(x + w / 2, y + h / 2 + 9, title, 26, RED if hot else INK, &#x27;middle&#x27;, 700)
+    return Gp(body, **k)
+
+def Tag(x, y, t, size=20, **k):
+    w = int(len(t) * size * 0.6 + 24)
+    return Gp(R(x, y, w, size + 14, &#x27;#fff&#x27;, RED, 2, 8) + T(x + w / 2, y + size + 1, t, size, RED, &#x27;middle&#x27;, 700), **k)
+
+</code></pre>
+
+<h2>5. The page template and screenshot script</h2>
+<p>Full files: <a href="../kit/template.html">kit/template.html</a> (the interface, about 130 lines) and <a href="../kit/shot.sh">kit/shot.sh</a> (the screenshot checker).</p>
+
+<p style="color:#6b7280;margin-top:40px">The example scenes that ship with the kit use a private demo, so they are not published here.</p>
+</main></body></html>

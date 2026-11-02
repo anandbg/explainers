@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{--ink:#111;--grey:#6b7280;--red:#d71f26;--soft:#eceef1;--line:#d9dce1}
+*{box-sizing:border-box;margin:0}
+html,body{background:#fff;color:var(--ink);font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+body{max-width:1100px;margin:0 auto;padding:14px 16px 40px}
+@media (prefers-color-scheme:dark){html,body{background:#fff;color:#111}}
+.top{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:8px}
+.brand{font-size:13px;letter-spacing:2px;font-weight:700;color:var(--grey);text-transform:uppercase}
+.menu{border:2px solid var(--ink);background:#fff;border-radius:10px;padding:6px 12px;font-size:15px;font-weight:700;cursor:pointer}
+.bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin-bottom:12px}
+.bar i{display:block;height:100%;width:0;background:var(--red);transition:width .4s}
+h1{font-size:clamp(24px,4.4vw,40px);letter-spacing:-.5px;line-height:1.1;margin:4px 0 10px}
+.kick{font-size:14px;letter-spacing:2px;font-weight:700;color:var(--red);text-transform:uppercase}
+#stage svg{display:block;width:100%;height:auto;background:#fff;border:3px solid var(--ink);border-radius:16px}
+#stage text{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+#stage [data-s],#stage [data-e],#stage [data-c],#stage [data-p]{transition:opacity .55s,transform .9s ease}
+#stage rect,#stage text,#stage path,#stage circle{transition:fill .4s,stroke .4s,opacity .55s}
+#stage .off{opacity:0!important;pointer-events:none}
+#stage .dim{opacity:.28}
+#stage .hot rect,#stage rect.hot{stroke:var(--red)!important}
+#stage .hot text{fill:var(--red)!important}
+#stage .hot path{stroke:var(--red)!important}
+#stage .notrans,#stage .notrans *{transition:none!important}
+#narr{margin-top:14px;border-left:6px solid var(--red);padding:6px 0 6px 16px;min-height:96px}
+#narr .lab{font-size:13px;letter-spacing:2px;font-weight:700;color:var(--grey);text-transform:uppercase;margin-bottom:4px}
+#narr p{font-size:clamp(19px,2.6vw,25px);line-height:1.38}
+#say{margin-top:12px;background:#fff4f4;border:3px solid var(--red);border-radius:14px;padding:10px 16px}
+#say .lab{font-size:13px;letter-spacing:2px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:4px}
+#say p{font-size:clamp(20px,2.8vw,27px);line-height:1.35;font-weight:700}
+#say.off{display:none}
+#aud{margin-top:10px;border:2px solid var(--line);border-radius:12px;padding:8px 14px;background:#fff}
+#aud summary{font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--grey)}
+#aud div.r{font-size:clamp(16px,2.2vw,20px);line-height:1.35;margin:8px 0}
+#aud b{display:inline-block;min-width:92px;color:var(--red)}
+.ctl{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{border:3px solid var(--ink);background:#fff;border-radius:12px;padding:10px 22px;font-size:19px;font-weight:700;cursor:pointer;color:var(--ink)}
+.btn.main{background:var(--red);border-color:var(--red);color:#fff}
+.btn:disabled{opacity:.3;cursor:default}
+.dots{display:flex;gap:7px;flex:1;justify-content:center;flex-wrap:wrap}
+.dots b{width:14px;height:14px;border-radius:7px;background:var(--line);cursor:pointer;display:block}
+.dots b.on{background:var(--red)}.dots b.done{background:var(--ink)}
+#drawer{position:fixed;inset:0;background:rgba(255,255,255,.97);display:none;overflow:auto;padding:24px 16px;z-index:9}
+#drawer.open{display:block}
+#drawer .in{max-width:640px;margin:0 auto}
+#drawer button{display:block;width:100%;text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;margin:8px 0;font-size:19px;cursor:pointer}
+#drawer button.cur{border-color:var(--red);font-weight:700}
+.card{border:3px solid var(--ink);border-radius:16px;padding:22px 22px}
+.card h2{font-size:clamp(22px,3.4vw,32px);margin-bottom:10px}
+.card p,.card li{font-size:clamp(18px,2.4vw,23px);line-height:1.4;margin:8px 0}
+.card ol{padding-left:26px}
+.q{border:3px solid var(--ink);border-radius:16px;padding:18px;margin:14px 0}
+.q .cue{font-size:clamp(20px,2.8vw,28px);font-weight:700;margin-bottom:10px}
+.q .opt{display:block;width:100%;text-align:left;border:3px solid var(--line);background:#fff;border-radius:12px;padding:12px 14px;margin:8px 0;font-size:clamp(17px,2.3vw,22px);cursor:pointer}
+.q .opt.right{border-color:#111;background:#111;color:#fff}
+.q .opt.wrong{border-color:var(--red);color:var(--red)}
+.q .why{font-size:clamp(16px,2.2vw,21px);margin-top:8px;color:var(--grey);display:none}
+.q.done .why{display:block}
+.score{font-size:30px;font-weight:700;color:var(--red);margin-top:10px}
+</style></head><body>
+<div class="top"><div class="brand">__BRAND__</div><button class="menu" id="menu">All steps</button></div>
+<div class="bar"><i id="prog"></i></div>
+<div class="kick" id="kick"></div>
+<h1 id="title"></h1>
+<div id="stage"></div>
+<div id="narr"><div class="lab" id="lab"></div><p id="text"></p></div>
+<div id="say"><div class="lab">Say this</div><p id="saytext"></p></div>
+<details id="aud"><summary>Tailor it for your room</summary><div id="audbody"></div></details>
+<div class="ctl"><button class="btn" id="back">Back</button><div class="dots" id="dots"></div><button class="btn" id="auto">Auto</button><button class="btn" id="sayt">Script: on</button><button class="btn main" id="next">Next</button></div>
+<div id="drawer"><div class="in"><h1>All steps</h1><div id="list"></div><button id="close" style="text-align:center;font-weight:700;border-color:#111">Close</button></div></div>
+<script>
+const PY = __SCENES__;
+const INTRO = __INTRO__;
+const QUIZ = {kind:'quiz', title:'Rehearse the room', narr:['Quiz']};
+const SC = [INTRO].concat(PY).concat([QUIZ]);
+const QS = __QS__;
+let si=0, bi=0, timer=null;
+const $=id=>document.getElementById(id);
+const stage=$('stage');
+function drawer(){const l=$('list');l.innerHTML='';SC.forEach((s,i)=>{const b=document.createElement('button');b.textContent=(i===0?'Start':i===SC.length-1?'Quiz':i+'. ')+(i>0&&i<SC.length-1?s.title:'');if(i===si)b.className='cur';b.onclick=()=>{go(i,0);$('drawer').classList.remove('open')};l.appendChild(b)})}
+function parseP(v,b){let best=[0,0];v.split(';').forEach(p=>{const [k,xy]=p.split(':');if(+k<=b){const [x,y]=xy.split(',');best=[+x,+y]}});return best}
+function apply(b){
+  const svg=stage.querySelector('svg'); if(!svg) return;
+  svg.querySelectorAll('[data-s],[data-e],[data-c],[data-p]').forEach(el=>{
+    const s=el.dataset.s,e=el.dataset.e;let vis=true;
+    if(s!==undefined&&b<+s)vis=false; if(e!==undefined&&b>=+e)vis=false;
+    el.classList.toggle('off',!vis);
+    if(el.dataset.c){const pairs=el.dataset.c.split(',').map(x=>x.split(':'));const all=new Set();pairs.forEach(p=>(p[1]||'').split(' ').forEach(c=>c&&all.add(c)));all.forEach(c=>el.classList.remove(c));let cur='';pairs.forEach(p=>{if(+p[0]<=b)cur=p[1]||''});cur.split(' ').forEach(c=>c&&el.classList.add(c))}
+    if(el.dataset.p){const [x,y]=parseP(el.dataset.p,b);el.style.transform=`translate(${x}px,${y}px)`}
+  });
+}
+function introHTML(){return __INTROHTML__}
+function quizHTML(){let h='<div id="qz">';QS.forEach((q,i)=>{h+=`<div class="q" data-i="${i}"><div class="cue">${q[0]}</div><div>${q[1]}</div>${q[2].map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}<div class="why">${q[4]}</div></div>`});h+='<div class="score" id="score"></div></div>';return h}
+function go(s,b){clearInterval(timer);timer=null;$('auto').textContent='Auto';si=Math.max(0,Math.min(SC.length-1,s));const sc=SC[si];bi=Math.max(0,Math.min(sc.narr.length-1,b));build();}
+function build(){
+  const sc=SC[si];
+  $('kick').textContent=si===0?'Start':si===SC.length-1?'Quiz':`Step ${si} of ${SC.length-2}`;
+  $('title').textContent=sc.title;
+  $('prog').style.width=(si/(SC.length-1)*100)+'%';
+  if(sc.kind==='intro'){stage.innerHTML=introHTML();$('narr').style.display='none';$('say').style.display='none';$('aud').style.display='none';$('aud').style.display='none'}
+  else if(sc.kind==='quiz'){stage.innerHTML=quizHTML();$('narr').style.display='none';$('say').style.display='none';
+    let right=0,done=0;stage.querySelectorAll('.q').forEach(q=>{const i=+q.dataset.i;q.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{if(q.classList.contains('done'))return;q.classList.add('done');const j=+o.dataset.j;done++;if(j===QS[i][3]){o.classList.add('right');right++}else{o.classList.add('wrong');q.querySelectorAll('.opt')[QS[i][3]].classList.add('right')}$('score').textContent=`${right} of ${QS.length} right`+(done===QS.length?(right===QS.length?'. You are ready for the room.':'. Go back to the steps you missed.'):'')})})}
+  else{$('narr').style.display='block';$('say').style.display='';$('aud').style.display='';stage.innerHTML=`<svg viewBox="0 0 960 600" class="notrans">${sc.svg}</svg>`;apply(bi);void stage.offsetWidth;stage.querySelector('svg').classList.remove('notrans')}
+  paint();
+}
+function paint(){
+  const sc=SC[si];const n=sc.narr.length;
+  if(sc.kind==='intro'||sc.kind==='quiz'){$('dots').innerHTML='';$('back').disabled=si===0;$('next').textContent=sc.kind==='quiz'?'Start again':(si===0?'Start':'Next');$('auto').style.display='none';return}
+  $('auto').style.display='';
+  $('lab').textContent=`Beat ${bi+1} of ${n}`;$('text').textContent=sc.narr[bi];$('saytext').textContent=(sc.say&&sc.say[bi])||'';$('audbody').innerHTML=sc.aud?`<div class=r><b>Executive</b>${sc.aud.exec}</div><div class=r><b>Security</b>${sc.aud.sec}</div><div class=r><b>Operations</b>${sc.aud.ops}</div>`:'';
+  $('dots').innerHTML=sc.narr.map((_,i)=>`<b class="${i===bi?'on':i<bi?'done':''}" data-i="${i}"></b>`).join('');
+  $('dots').querySelectorAll('b').forEach(b=>b.onclick=()=>{bi=+b.dataset.i;apply(bi);paint()});
+  $('back').disabled=false;$('next').textContent=(bi===n-1&&si<SC.length-1)?'Next step':'Next';
+}
+function next(){const sc=SC[si];if(sc.kind==='quiz'){go(0,0);return}if(sc.kind==='intro'){go(1,0);return}if(bi<sc.narr.length-1){bi++;apply(bi);paint()}else go(si+1,0)}
+function back(){const sc=SC[si];if(sc.kind==='intro'||sc.kind==='quiz'){go(si-1,SC[si-1].narr.length-1);return}if(bi>0){bi--;apply(bi);paint()}else if(si>0){go(si-1,SC[si-1].narr.length-1)}}
+$('next').onclick=next;$('back').onclick=back;
+$('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('auto').textContent='Auto'}else{$('auto').textContent='Pause';timer=setInterval(()=>{const sc=SC[si];if(si>=SC.length-1){clearInterval(timer);timer=null;$('auto').textContent='Auto';return}next()},5500)}};
+$('sayt').onclick=()=>{const o=$('say').classList.toggle('off');$('sayt').textContent=o?'Script: off':'Script: on'};
+$('menu').onclick=()=>{drawer();$('drawer').classList.add('open')};$('close').onclick=()=>$('drawer').classList.remove('open');
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')next();if(e.key==='ArrowLeft')back()});
+let tx=null;document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>70){d<0?next():back()}tx=null},{passive:true});
+(function(){const m=location.hash.match(/s(\d+)b(\d+)/);if(m)go(+m[1],+m[2]);else go(0,0)})();
+</script></body></html>
